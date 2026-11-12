@@ -1,0 +1,52 @@
+#!/usr/bin/env python3
+"""Keep waiting on a background task after a budget wake-up.
+
+Usage: budget-wait <task output file> <duration, e.g. 5m>
+Run it with the Bash tool in the background. It exits, which notifies the agent,
+when the task finishes, the duration passes, or the task looks hung.
+"""
+import os
+import sys
+import time
+
+sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))
+import budgetlib as B  # noqa: E402
+
+
+def main(argv):
+    if len(argv) != 3:
+        print(__doc__.strip())
+        return 64
+    path, dur = argv[1], B.parse_duration(argv[2])
+    if not os.path.exists(path):
+        print(f"No such task output file: {path}")
+        return 66
+    if not isinstance(dur, int):
+        print(f"Bad duration {argv[2]!r}: use a number with a unit, e.g. 90s, 5m, 1h.")
+        return 64
+    task_id = os.path.basename(path).rsplit(".", 1)[0]
+    meta = B.peek_pending(path) or {}
+    started = meta.get("started") or B.start_time(path)
+    command = meta.get("command")
+    now = time.time()
+    estimate = int(now - started + dur)
+    w = B.Watch(path, started, now + dur, B.silence_threshold(dur))
+    reason = w.run()
+    if reason in ("done", "gone"):
+        marker = B.finished_marker(path) or "no exit marker; the process is gone"
+        meta = B.pop_pending(path)
+        if meta:
+            B.record_history({"ts": int(time.time()), "cwd": meta.get("cwd"), "command": meta.get("command"),
+                              "estimate": meta.get("estimate"), "actual": int(time.time() - started),
+                              "result": B.finished_marker(path) or reason, "overran": True})
+        print(f"[budget] Task {task_id} finished after {B.fmt(time.time() - started)} ({marker}).")
+        print("Last output lines:")
+        for line in B.tail_lines(path, 15):
+            print("  " + line)
+        return 0
+    print(B.report(w, reason, task_id, command, estimate, B.continue_hint(path)))
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv))

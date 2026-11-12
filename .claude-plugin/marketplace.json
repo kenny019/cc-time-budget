@@ -1,0 +1,18 @@
+{
+  "name": "cc-time-budget",
+  "owner": {
+    "name": "kenny019",
+    "url": "https://github.com/kenny019"
+  },
+  "metadata": {
+    "description": "Time budgets for long-running Claude Code commands."
+  },
+  "plugins": [
+    {
+      "name": "time-budget",
+      "source": "./",
+      "description": "Wakes Claude when a background command runs past its own time estimate or goes silent and idle, with a status report.",
+      "version": "1.0.0"
+    }
+  ]
+}

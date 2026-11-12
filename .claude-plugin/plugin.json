@@ -1,0 +1,13 @@
+{
+  "name": "time-budget",
+  "version": "1.0.0",
+  "description": "Wakes Claude when a background command runs past its own time estimate or goes silent and idle, with a status report, so hung E2E runs and builds get noticed in minutes instead of hours.",
+  "author": {
+    "name": "kenny019",
+    "url": "https://github.com/kenny019"
+  },
+  "homepage": "https://github.com/kenny019/cc-time-budget",
+  "repository": "https://github.com/kenny019/cc-time-budget",
+  "license": "MIT",
+  "keywords": ["hooks", "background", "timeout", "watchdog", "e2e"]
+}
